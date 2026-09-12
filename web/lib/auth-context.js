@@ -6,24 +6,29 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
 
-  // Same check the original App.js did on mount: presence of authToken in localStorage.
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     setIsAuthenticated(!!token);
+    setEmail(localStorage.getItem("registeredEmail"));
     setAuthChecked(true);
   }, []);
 
-  const login = () => setIsAuthenticated(true);
-  const logout = () => setIsAuthenticated(false);
+  const login = (userEmail) => {
+    setIsAuthenticated(true);
+    if (userEmail) setEmail(userEmail);
+  };
+  const logout = () => {
+    setIsAuthenticated(false);
+    setEmail(null);
+  };
 
-  // Matches original behavior: render nothing until the auth check has run once,
-  // avoiding a flash of the wrong (logged-out) UI.
   if (!authChecked) return null;
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, authChecked, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, authChecked, email, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

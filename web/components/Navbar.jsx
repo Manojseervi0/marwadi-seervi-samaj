@@ -1,24 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FaGlobe } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/lib/auth-context";
 
 export default function Navbar() {
   const router = useRouter();
   const { i18n } = useTranslation();
-
-  // Read localStorage after mount only, to avoid SSR/client hydration mismatch
-  // (the original CRA app read these directly during render since it had no SSR pass).
-  const [token, setToken] = useState(null);
-  const [email, setEmail] = useState(null);
-
-  useEffect(() => {
-    setToken(localStorage.getItem("authToken"));
-    setEmail(localStorage.getItem("registeredEmail"));
-  }, []);
+  const { isAuthenticated, email, logout } = useAuth();
 
   const toggleLanguage = () => {
     const newLang = i18n.language === "hi" ? "en" : "hi";
@@ -29,8 +20,8 @@ export default function Navbar() {
     localStorage.removeItem("authToken");
     localStorage.removeItem("registeredEmail");
     localStorage.removeItem("userRole");
+    logout();
     router.push("/login");
-    window.location.reload();
   };
 
   const navLinks = [
@@ -91,7 +82,7 @@ export default function Navbar() {
             {i18n.language === "hi" ? "EN" : "हिं"}
           </button>
 
-          {token ? (
+          {isAuthenticated ? (
             <>
               <span className="hidden md:block text-sm text-gray-600">{email}</span>
               <button

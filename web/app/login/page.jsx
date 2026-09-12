@@ -39,7 +39,7 @@ export default function LoginPage() {
       if (data.user && data.user.role) {
         localStorage.setItem("userRole", data.user.role);
       }
-      login();
+      login(email);
       toast({ title: t("common.success"), description: "Login successful!", status: "success", duration: 3000 });
       router.push("/dashboard");
     } catch (err) {
