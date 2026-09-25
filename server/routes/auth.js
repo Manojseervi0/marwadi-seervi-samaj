@@ -50,7 +50,7 @@ router.post(
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: 24 * 60 * 60 * 1000,
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/'
       });
       res.status(201).json({
@@ -88,7 +88,7 @@ router.post(
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: 24 * 60 * 60 * 1000,
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/'
       });
       res.json({
@@ -103,7 +103,12 @@ router.post(
 );
 
 router.post('/logout', (req, res) => {
-  res.clearCookie('token', { path: '/' });
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    path: '/'
+  });
   res.json({ message: 'Logged out successfully' });
 });
 
@@ -136,7 +141,9 @@ router.post(
 
       // 6-digit random OTP
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      user.resetOTP = otp;
+      
+      const salt = await bcrypt.genSalt(10);
+      user.resetOTP = await bcrypt.hash(otp, salt);
       user.resetOTPExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
       await user.save();
 
@@ -176,12 +183,17 @@ router.post(
         return res.status(404).json({ message: 'User not found' });
       }
 
-      if (!user.resetOTP || user.resetOTP !== otp) {
+      if (!user.resetOTPExpiry || user.resetOTPExpiry < new Date()) {
+        return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
+      }
+
+      if (!user.resetOTP) {
         return res.status(400).json({ message: 'Invalid OTP' });
       }
 
-      if (!user.resetOTPExpiry || user.resetOTPExpiry < new Date()) {
-        return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
+      const isMatch = await bcrypt.compare(otp, user.resetOTP);
+      if (!isMatch) {
+        return res.status(400).json({ message: 'Invalid OTP' });
       }
 
       // Generate short-lived reset token (10 minutes)
