@@ -5,6 +5,7 @@ import {
   FaGraduationCap, FaBriefcase, FaUsers, FaLightbulb, FaStar, FaMapMarkerAlt, FaPlus, FaTimes,
 } from "react-icons/fa";
 import { useToast } from "@/lib/toast-context";
+import { useAuth } from "@/lib/auth-context";
 
 const initialJobs = [
   { id: "mock-1", title: "Software Developer", company: "TechCorp India", location: "Mumbai, Maharashtra", salary: "₹8-12 LPA", type: "Full-time", experience: "2-4 years", skills: ["JavaScript", "React", "Node.js"], posted: "Recent" },
@@ -26,6 +27,7 @@ const mentors = [
 ];
 
 export default function CareerHelpPage() {
+  const { isAuthenticated } = useAuth();
   const [jobOpportunities, setJobOpportunities] = useState(initialJobs);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -60,8 +62,7 @@ export default function CareerHelpPage() {
 
   const handlePostJob = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("authToken");
-    if (!token) {
+    if (!isAuthenticated) {
       toast({ title: "Authentication Required", description: "Please log in to post a career opportunity", status: "warning", duration: 3000 });
       return;
     }
@@ -71,7 +72,8 @@ export default function CareerHelpPage() {
       const skillsArray = newJob.skills ? newJob.skills.split(",").map((s) => s.trim()) : [];
       const res = await fetch(`${apiUrl}/api/career`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ ...newJob, skills: skillsArray }),
       });
 

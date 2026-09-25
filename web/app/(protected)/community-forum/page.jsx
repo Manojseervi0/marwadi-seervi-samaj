@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { FaComments, FaQuestion, FaLightbulb, FaUsers, FaHeart, FaReply, FaShare } from "react-icons/fa";
 import { useToast } from "@/lib/toast-context";
+import { useAuth } from "@/lib/auth-context";
 
 const initialPosts = [
   {
@@ -56,6 +57,7 @@ const categories = [
 ];
 
 export default function CommunityForumPage() {
+  const { email } = useAuth();
   const [forumPosts, setForumPosts] = useState(initialPosts);
   const [newQuestion, setNewQuestion] = useState("");
   const [newAnswer, setNewAnswer] = useState("");
@@ -77,7 +79,7 @@ export default function CommunityForumPage() {
       id: Date.now(),
       title: newQuestion.slice(0, 60) + (newQuestion.length > 60 ? "..." : ""),
       content: newQuestion,
-      author: localStorage.getItem("registeredEmail") || "Community Member",
+      author: email || "Community Member",
       category: selectedCategory,
       replies: 0,
       likes: 0,
@@ -112,7 +114,7 @@ export default function CommunityForumPage() {
 
     const newReply = {
       id: Date.now(),
-      author: localStorage.getItem("registeredEmail") || "Community Member",
+      author: email || "Community Member",
       text: newAnswer.trim(),
       timeAgo: "Just now",
     };

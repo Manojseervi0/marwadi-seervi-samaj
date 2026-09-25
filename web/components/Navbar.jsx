@@ -16,11 +16,8 @@ export default function Navbar() {
     i18n.changeLanguage(newLang);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("registeredEmail");
-    localStorage.removeItem("userRole");
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push("/login");
   };
 

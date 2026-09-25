@@ -5,6 +5,7 @@ import {
   FaSearch, FaMapMarkerAlt, FaClock, FaPhone, FaGlobe, FaStar, FaPrayingHands, FaPlus, FaTimes,
 } from "react-icons/fa";
 import { useToast } from "@/lib/toast-context";
+import { useAuth } from "@/lib/auth-context";
 
 const initialTemples = [
   { id: "mock-1", name: "Shri Swaminarayan Mandir", type: "Swaminarayan Temple", city: "Mumbai", address: "Bandra West, Mumbai, Maharashtra", description: "A beautiful temple dedicated to Lord Swaminarayan with intricate architecture and peaceful atmosphere.", image: "https://images.unsplash.com/photo-1542810634-71277d95dcbb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", rating: 4.8, reviews: 156, timings: "5:00 AM - 9:00 PM", phone: "+91 22 2640 1234", website: "www.swaminarayanmumbai.org", features: ["Aarti", "Prasad", "Parking", "Library"], specialDays: ["Ekadashi", "Purnima", "Janmashtami"] },
@@ -40,11 +41,13 @@ export default function TempleDetailsPage() {
   const toast = useToast();
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
+  const { role, isAuthenticated } = useAuth();
+
   useEffect(() => {
-    setIsAdmin(localStorage.getItem("userRole") === "admin");
+    setIsAdmin(role === "admin");
     fetchTemples();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [role]);
 
   const fetchTemples = async (params = {}) => {
     try {
@@ -87,8 +90,7 @@ export default function TempleDetailsPage() {
 
   const handleAddTemple = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("authToken");
-    if (!token) {
+    if (!isAuthenticated) {
       toast({ title: "Authentication Required", description: "Please log in as an administrator to add temples", status: "warning", duration: 3000 });
       return;
     }
@@ -97,7 +99,8 @@ export default function TempleDetailsPage() {
     try {
       const res = await fetch(`${apiUrl}/api/temples`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           ...newTemple,
           image: "https://images.unsplash.com/photo-1542810634-71277d95dcbb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",

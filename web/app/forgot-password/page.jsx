@@ -34,10 +34,9 @@ export default function ForgotPasswordPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to send OTP");
 
-      if (data.otp) setDemoOtpHint(data.otp);
       toast({
         title: "OTP Sent",
-        description: data.otp ? `OTP sent! (For testing: ${data.otp})` : data.message,
+        description: data.message,
         status: "success",
         duration: 5000,
       });

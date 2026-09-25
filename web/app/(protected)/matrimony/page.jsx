@@ -6,6 +6,7 @@ import {
   FaSearch, FaHeart, FaUser, FaMapMarkerAlt, FaGraduationCap, FaBriefcase, FaPlus, FaTimes,
 } from "react-icons/fa";
 import { useToast } from "@/lib/toast-context";
+import { useAuth } from "@/lib/auth-context";
 
 const initialMockProfiles = [
   {
@@ -74,6 +75,7 @@ function Avatar({ src, name, size = 48 }) {
 }
 
 export default function MatrimonyPage() {
+  const { isAuthenticated } = useAuth();
   const searchParams = useSearchParams();
   const [profiles, setProfiles] = useState(initialMockProfiles);
   const [searchTerm, setSearchTerm] = useState("");
@@ -184,8 +186,7 @@ export default function MatrimonyPage() {
 
   const handleCreateProfile = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("authToken");
-    if (!token) {
+    if (!isAuthenticated) {
       toast({
         title: "Authentication Required",
         description: "Please log in to create a matrimony profile",
@@ -203,9 +204,9 @@ export default function MatrimonyPage() {
       const res = await fetch(`${apiUrl}/api/matrimony`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
         },
+        credentials: "include",
         body: JSON.stringify({
           ...newProfile,
           age: Number(newProfile.age),

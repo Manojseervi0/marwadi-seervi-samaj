@@ -1,13 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useAuth } from "@/lib/auth-context";
 
 export default function Dashboard() {
-  const [email, setEmail] = useState(null);
-
-  useEffect(() => {
-    setEmail(localStorage.getItem("registeredEmail"));
-  }, []);
+  const { email } = useAuth();
 
   return (
     <div className="min-h-screen bg-orange-50 py-10">

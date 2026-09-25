@@ -30,16 +30,12 @@ export default function LoginPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
+        credentials: "include",
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Login failed");
 
-      localStorage.setItem("authToken", data.token);
-      localStorage.setItem("registeredEmail", email);
-      if (data.user && data.user.role) {
-        localStorage.setItem("userRole", data.user.role);
-      }
-      login(email);
+      login(data.user);
       toast({ title: t("common.success"), description: "Login successful!", status: "success", duration: 3000 });
       router.push("/dashboard");
     } catch (err) {

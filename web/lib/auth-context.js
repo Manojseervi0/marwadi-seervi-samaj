@@ -6,29 +6,61 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [email, setEmail] = useState(null);
+  const [user, setUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
 
-  useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    setIsAuthenticated(!!token);
-    setEmail(localStorage.getItem("registeredEmail"));
-    setAuthChecked(true);
-  }, []);
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-  const login = (userEmail) => {
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch(`${apiUrl}/api/auth/me`, {
+          credentials: 'include'
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setIsAuthenticated(true);
+          setUser(data.user);
+        } else {
+          setIsAuthenticated(false);
+          setUser(null);
+        }
+      } catch (err) {
+        setIsAuthenticated(false);
+        setUser(null);
+      } finally {
+        setAuthChecked(true);
+      }
+    };
+    
+    checkAuth();
+  }, [apiUrl]);
+
+  const login = (userData) => {
     setIsAuthenticated(true);
-    if (userEmail) setEmail(userEmail);
+    if (userData) setUser(userData);
   };
-  const logout = () => {
+  
+  const logout = async () => {
+    try {
+      await fetch(`${apiUrl}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (e) {
+      console.error(e);
+    }
     setIsAuthenticated(false);
-    setEmail(null);
+    setUser(null);
   };
 
   if (!authChecked) return null;
 
+  const email = user ? user.email : null;
+  const role = user ? user.role : null;
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, authChecked, email, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, authChecked, email, role, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

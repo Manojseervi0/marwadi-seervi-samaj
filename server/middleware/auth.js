@@ -1,8 +1,20 @@
 const jwt = require('jsonwebtoken');
 
 function verifyToken(req, res, next) {
+  let token = null;
   const authHeader = req.headers.authorization || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (authHeader.startsWith('Bearer ')) {
+    token = authHeader.slice(7);
+  } else if (req.headers.cookie) {
+    const cookies = req.headers.cookie.split(';').map(c => c.trim());
+    for (const c of cookies) {
+      if (c.startsWith('token=')) {
+        token = c.substring(6);
+        break;
+      }
+    }
+  }
+
   if (!token) return res.status(401).json({ message: 'No token provided' });
   try {
     req.user = jwt.verify(token, process.env.JWT_SECRET);

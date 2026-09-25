@@ -46,9 +46,15 @@ router.post(
       const hashedPassword = await bcrypt.hash(password, salt);
       const newUser = await User.create({ name, email, password: hashedPassword, role: 'user' });
       const token = signToken(newUser);
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000,
+        sameSite: 'lax',
+        path: '/'
+      });
       res.status(201).json({
         message: 'User registered successfully',
-        token,
         user: { id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role },
       });
     } catch (error) {
@@ -78,9 +84,15 @@ router.post(
       if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
       
       const token = signToken(user);
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000,
+        sameSite: 'lax',
+        path: '/'
+      });
       res.json({
         message: 'Login successful',
-        token,
         user: { id: user._id, name: user.name, email: user.email, role: user.role },
       });
     } catch (error) {
@@ -89,6 +101,11 @@ router.post(
     }
   }
 );
+
+router.post('/logout', (req, res) => {
+  res.clearCookie('token', { path: '/' });
+  res.json({ message: 'Logged out successfully' });
+});
 
 router.get('/me', verifyToken, async (req, res) => {
   try {
@@ -123,10 +140,15 @@ router.post(
       user.resetOTPExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
       await user.save();
 
-      // TODO: email integration, abhi OTP response me bhej rahe hain testing ke liye
+      const { sendEmail } = require('../services/emailService');
+      await sendEmail({
+        to: user.email,
+        subject: 'Password Reset OTP - Marwadi Seervi Samaj',
+        text: `Your OTP for password reset is: ${otp}\nIt is valid for 10 minutes.`
+      });
+
       res.json({
-        message: 'OTP sent to your email (valid for 10 minutes)',
-        otp,
+        message: 'OTP sent to your email (valid for 10 minutes)'
       });
     } catch (error) {
       console.error('FORGOT PASSWORD ERROR:', error);
