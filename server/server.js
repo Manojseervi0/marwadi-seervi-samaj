@@ -11,6 +11,11 @@ if (!process.env.JWT_SECRET) {
   process.exit(1);
 }
 
+if (process.env.NODE_ENV === 'production' && !process.env.MONGODB_URI) {
+  console.error('FATAL: MONGODB_URI is required in production environment.');
+  process.exit(1);
+}
+
 const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
