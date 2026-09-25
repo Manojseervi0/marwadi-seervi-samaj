@@ -18,6 +18,8 @@ const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
   .split(',')
   .map((origin) => origin.trim());
 
+app.use(helmet());
+
 app.use(
   cors({
     origin: (origin, callback) => {
