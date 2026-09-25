@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 if (!process.env.JWT_SECRET) {
@@ -48,6 +49,16 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', require('./routes/auth'));
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many requests from this IP, please try again after 15 minutes' }
+});
+app.use('/api', apiLimiter);
+
 app.use('/api/users', require('./routes/users'));
 app.use('/api/matrimony', require('./routes/matrimony'));
 app.use('/api/career', require('./routes/career'));
