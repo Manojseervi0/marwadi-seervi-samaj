@@ -49,12 +49,14 @@ export default function CareerHelpPage() {
       const res = await fetch(`${apiUrl}/api/career`);
       if (res.ok) {
         const data = await res.json();
-        if (data.opportunities && data.opportunities.length > 0) {
-          setJobOpportunities(data.opportunities);
-        }
+        setJobOpportunities(data.opportunities || []);
+      } else {
+        throw new Error("Failed to fetch opportunities");
       }
     } catch (err) {
-      console.warn("Using local jobs fallback:", err.message);
+      console.error("API Error:", err.message);
+      setJobOpportunities([]);
+      toast({ title: "Error", description: "Could not load jobs from server.", status: "error", duration: 3000 });
     } finally {
       setIsLoading(false);
     }

@@ -99,12 +99,14 @@ export default function MatrimonyPage() {
       const res = await fetch(`${apiUrl}/api/matrimony`);
       if (res.ok) {
         const data = await res.json();
-        if (data.profiles && data.profiles.length > 0) {
-          setProfiles(data.profiles);
-        }
+        setProfiles(data.profiles || []);
+      } else {
+        throw new Error("Failed to fetch profiles");
       }
     } catch (err) {
-      console.warn("Using local profiles fallback:", err.message);
+      console.error("API Error:", err.message);
+      setProfiles([]);
+      toast({ title: "Error", description: "Could not load profiles from server.", status: "error", duration: 3000 });
     } finally {
       setIsLoading(false);
     }
@@ -164,21 +166,12 @@ export default function MatrimonyPage() {
         const data = await res.json();
         setProfiles(data.profiles || []);
       } else {
-        let filtered = [...initialMockProfiles];
-        if (searchTerm) {
-          filtered = filtered.filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
-        }
-        if (selectedLocation) {
-          filtered = filtered.filter((p) => p.location.toLowerCase().includes(selectedLocation.toLowerCase()));
-        }
-        if (selectedAge) {
-          const [min, max] = selectedAge.split("-").map(Number);
-          filtered = filtered.filter((p) => p.age >= min && p.age <= max);
-        }
-        setProfiles(filtered);
+        throw new Error("Search failed on server");
       }
     } catch (err) {
       console.error("Search error:", err);
+      setProfiles([]);
+      toast({ title: "Error", description: "Could not search profiles on server.", status: "error", duration: 3000 });
     } finally {
       setIsLoading(false);
     }
