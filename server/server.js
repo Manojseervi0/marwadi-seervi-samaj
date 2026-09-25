@@ -32,7 +32,6 @@ app.use(
 );
 app.use(morgan('combined'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 mongoose
   .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/marwadi-portal')
